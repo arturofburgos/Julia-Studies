@@ -10,78 +10,64 @@
 using LinearAlgebra
 
 
-# TIME GRID
+# Time grid 
 
-T = 120
+T = 15
 dt = 0.02 
 N = Int(T/dt) + 1 # Number of time-steps
 t = range(0, T, N)
 
 
-# MATRIX O
-
 O = zeros(2,2)
 
-# MATRIX A AND At
+# Matrix M̃
 
-A = [1 0 ; -1 1]
+m1 = 3
+m2 = 3 
+m = [m1, m2]
+M̃ = diagm(m)
+
+M = [I O; O M̃]
+
+# Matrix K̃
+
+A = [1 0; -1 1]
 At = A'
 
-
-# MATRIX K
 k1 = 8
 k2 = 8
 k = [k1, k2]
-K = diagm(k)
+K̃ = diagm(k)
 
-# MATRIX K̂
+K̂ = At*K̃*A
 
-K̂ = At*K*A
+K = [O -I; K̂ O] # CHECK
 
-# MATRIX M
+# State space representation u
 
-m1 = 3
-m2 = 3
-m = [m1, m2]
-M = diagm(m)
-
-
-M̃ = [I O ; O M]
-K̃ = [O I ; K̂ O]
-
-x0_1 = 0.0 # Initial Position
+x0_1 = 0.0 
 x0_2 = 2.0
-x0 = [x0_1 x0_2]
+x0 = [x0_1 x0_2] # Initial Position
 
-ẋ0_1 = 1.0 # Initial Velocity
-ẋ0_2 = 1.0
+ẋ0_1 = 1.0
+ẋ0_2 = 0.0
 ẋ0 = [ẋ0_1 ẋ0_2]
 
 u = [x0 ẋ0]'
+un = zeros(4,1)
 
 x = zeros(N,4)
 x[1,:] = [x0 ẋ0]
-################################################
-# Inverse is: 
 
-#= A^-1
+C = (inv(M) * -K)
 
-# Division is multiplying by inverse:
 
-A/K
-K^-1*A
-A/K == A*(K^-1) =#
 
-##############################################
-c = inv(M̃) * K̃
-c[1:2, 3:4] .*= -1
-
-println(u)
 for i in 2:N 
     
     
-    u[:] = u[:] + dt *(-c*u[:])
-    println(u)
+    u[:] = inv(I - (dt/2)* C)*(I + (dt/2)* C)*u[:] 
+    #println(u)
     x[i,:] = u[1:4]
     
 end
@@ -90,6 +76,3 @@ using Plots
 
 plot(t,x[:,1:2])
 
-
-
-#, xlim = (0,0.5),ylim = (-5,5)
