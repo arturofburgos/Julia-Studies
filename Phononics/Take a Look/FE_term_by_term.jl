@@ -62,9 +62,14 @@ for i in 2:N
     u1[1] = u1[1] + dt * u1[2]
     u2[1] = u2[1] + dt * u2[2]
 
-    u1[2] = u1[2] + dt * ((-k1/m1) * (u1[1]-1) + (k2/m1) * (u2[1]-u1[1]-2))
+    u1[2] = u1[2] + dt * ((-k1/m1) * (u1[1]+1) + (k2/m1) * (u2[1]-u1[1]-2))
     u2[2] = u2[2] + dt * (-k2/m2) * (u2[1] - u1[1]-2)
-     
+    
+    #Discuss this offset with Prof Andres.
+
+    #= u1[2] = u1[2] + dt * ((-k1/m1) * (u1[1]+0) + (k2/m1) * (u2[1]-u1[1]-0))
+    u2[2] = u2[2] + dt * (-k2/m2) * (u2[1] - u1[1]-0) =# # In this case I have the same results as the other schemes.
+    
     
     x1[i] = u1[1]
     x2[i] = u2[1]

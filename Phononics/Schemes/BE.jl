@@ -12,8 +12,8 @@ using LinearAlgebra
 
 # Time grid 
 
-T = 15
-dt = 0.02 
+T = 20
+dt = 0.0002 
 N = Int(T/dt) + 1 # Number of time-steps
 t = range(0, T, N)
 
@@ -22,8 +22,8 @@ O = zeros(2,2)
 
 # Matrix M̃
 
-m1 = 3
-m2 = 3 
+m1 = 1
+m2 = 5 
 m = [m1, m2]
 M̃ = diagm(m)
 
@@ -49,8 +49,8 @@ x0_1 = 0.0
 x0_2 = 2.0
 x0 = [x0_1 x0_2] # Initial Position
 
-ẋ0_1 = 1.0
-ẋ0_2 = 0.0
+ẋ0_1 = 0.1
+ẋ0_2 = 1.1
 ẋ0 = [ẋ0_1 ẋ0_2]
 
 u = [x0 ẋ0]'
