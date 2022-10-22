@@ -6,77 +6,208 @@
 #                                        #
 #========================================#
 
-# Second order ODE: Harmonic Oscillation - two spring and two mass
-using LinearAlgebra
+# Second order ODE: Harmonic Oscillation - nm spring and nm mass
+using LinearAlgebra, LinearMaps, Plots
+#============#
+# USER INPUT #
+#============#
 
+T = 150
+dt = 0.02 
 # Here define the number of pair spring-mass: 
+nm = 3
+# Assuming all the masses are equal:
+m = 3
+# Assuming all springs are equal:
+k = 8
 
-nm = 2
+# Initial Quantities
+# Note that we should assign nm quatities for position and velocity
+
+# Initial Position
+x0 = [0.0 0.2 0.4] 
+# Initial Velocity
+ẋ0 = [0.1 0.5 1.1]
 
 
-# Time grid 
+#===========================#
+# Procedure Numerical Model #
+#===========================#
 
-T = 20
-dt = 0.0002 
+# Time grid:
 N = Int(T/dt) + 1 # Number of time-steps
 t = range(0, T, N)
 
+# Define the zero matrix:
+O = zeros(nm, nm)
 
-O = zeros(2,2)
+# Define M̃ matrix
+m_vec = fill(m, nm)
+M̃ = diagm(m_vec)
 
-# Matrix M̃
-
-m1 = 1
-m2 = 5 
-m = [m1, m2]
-M̃ = diagm(m)
-
+# Define big M matrix 
 M = [I O; O M̃]
 
-# Matrix K̃
+# Define A and At matrices: We either can create the actual A matrix
+# Or we can apply a function Atimes! that maps a matrix. 
 
-A = [1 0; -1 1]
-At = A'
+#========#
+# Matrix #
+#========#
 
-k1 = 8
-k2 = 8
-k = [k1, k2]
-K̃ = diagm(k)
+#= A = zeros(nm,nm)
 
-K̂ = At*K̃*A
-
-K = [O -I; K̂ O] # CHECK
-
-# State space representation u
-
-x0_1 = 0.0 
-x0_2 = 2.0
-x0 = [x0_1 x0_2] # Initial Position
-
-ẋ0_1 = 0.1
-ẋ0_2 = 1.1
-ẋ0 = [ẋ0_1 ẋ0_2]
-
-u = [x0 ẋ0]'
-un = zeros(4,1)
-
-x = zeros(N,4)
-x[1,:] = [x0 ẋ0]
-
-C = (inv(M) * -K)
-
-
-
-for i in 2:N 
-    
-    
-    u[:] = inv(I - dt* C)*u[:] 
-    #println(u)
-    x[i,:] = u[1:4]
-    
+for i in 1:nm
+    for j in 1:nm
+        if j == i
+            A[i,j] = 1
+        end
+        if j == i - 1
+            A[i,j] = -1
+        end
+    end 
 end
 
-using Plots
+At = A' =#
 
-plot(t,x[:,1:2])
+#===========#
+# LinearMap #
+#===========#
 
+"""Implements the matrix multiplication y = Ax.
+
+For example, if n = 3:
+
+```
+    | 1       |
+y = |-1  1    | x
+    |   -1  1 |
+```
+"""
+function A_times!(y::AbstractVector, x::AbstractVector)
+
+    n = length(x)
+    @assert n == length(y) && n > 0
+
+    y[1] = x[1]
+    for i in 2:n
+        y[i] = x[i] - x[i-1]
+    end
+
+    return y
+end
+
+
+"""Implements the matrix multiplication y = Ax.
+
+For example, if n = 3:
+
+```
+    | 1 -1    |
+y = |    1 -1 | x
+    |       1 |
+```
+"""
+function A_times_T!(y::AbstractVector, x::AbstractVector)
+
+    n = length(x)
+    @assert n == length(y) && n > 0
+
+    y[n] = x[n]
+    for i in 1:n-1
+        y[i] = x[i] - x[i+1]
+    end
+
+    return y
+end
+ 
+A = LinearMap(A_times!,A_times_T!, nm)
+
+# Define K̃ matrix
+k_vec = fill(k,nm)
+K̃ = diagm(k_vec)
+
+# Define K̂
+K̂ = A'*K̃*A
+
+# Define big K matrix
+K = [O -I; K̂ O]
+
+# Define big C matrix
+C = (-inv(M) * K)
+
+# Define State Space representation u:
+u = [x0 ẋ0]'
+
+# Defining solution array:
+x = zeros(N,2*nm)
+# Assingning the initial conditions to solution array
+x[1,:] = [x0 ẋ0]
+
+
+#======================#
+# Forward Euler Scheme #
+#======================#
+
+#= for i in 2:N
+    u[:] = u[:] + dt *(C*u[:])
+    x[i,:] = u[:]
+end =#
+
+function forward_euler(y, h, N, A, save_var)
+    for i in 2:N
+        y[:] = y[:] + h * A *y[:]
+        save_var[i,:] = y[:]
+    end
+
+    return save_var
+end
+
+
+#=======================#
+# Backward Euler Scheme #
+#=======================#
+
+#= for i in 2:N     
+    u[:] = inv(I - dt* C)*u[:] 
+    x[i,:] = u[:]
+end =#
+
+function backward_euler(y, h, N, A, save_var)
+    for i in 2:N
+        y[:] = inv(I - h * A) * y[:]
+        save_var[i,:] = y[:]
+    end
+
+    return save_var
+end
+
+
+#====================#
+# Trapezoidal Scheme #
+#====================#
+
+#= for i in 2:N 
+    u[:] = inv(I - (dt/2)* C)*(I + (dt/2)* C)*u[:] 
+    x[i,:] = u[:]
+end =#
+
+function trapezoidal(y, h, N, A, save_var)
+    for i in 2:N
+        y[:] = inv(I - (h/2) * A) * (I + (h/2) * A) * y[:]
+        save_var[i,:] = y[:]
+    end
+
+    return save_var
+end
+
+x = forward_euler(u, dt, N, C, x)
+#x = backward_euler(u, dt, N, C, x)
+#x = trapezoidal(u, dt, N, C, x)
+
+
+#=================#
+# Post Processing #
+#=================#
+
+plot(t,x[:,1:nm])

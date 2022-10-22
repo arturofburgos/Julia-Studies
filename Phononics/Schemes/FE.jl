@@ -54,7 +54,7 @@ ẋ0_2 = 0.0
 ẋ0 = [ẋ0_1 ẋ0_2]
 
 u = [x0 ẋ0]'
-un = zeros(4,1)
+#un = zeros(4,1)
 
 x = zeros(N,4)
 x[1,:] = [x0 ẋ0]
@@ -68,7 +68,7 @@ for i in 2:N
     
     u[:] = u[:] + dt *(C*u[:])
     #println(u)
-    x[i,:] = u[1:4]
+    x[i,:] = u[:]
     
 end
 
