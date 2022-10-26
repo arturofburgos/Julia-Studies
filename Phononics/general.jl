@@ -12,7 +12,7 @@ using LinearAlgebra, LinearMaps, Plots
 # USER INPUT #
 #============#
 
-T = 25
+T = 125
 dt = 0.02 
 # Here define the number of pair spring-mass: 
 nm = 3

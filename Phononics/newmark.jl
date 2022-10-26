@@ -14,8 +14,8 @@ using LinearAlgebra, LinearMaps, Plots
 # USER INPUT #
 #============#
 
-T = 5
-dt = 0.005 
+T = 125
+dt = 0.02 
 # Here define the number of pair spring-mass: 
 nm = 3
 # Assuming all the masses are equal:
@@ -33,9 +33,14 @@ k = 8
 # Note that we should assign nm quatities for position and velocity
 
 # Initial Position
-x0 = [0.1 0.0 0.0] 
+#x0 = [0.1 0.0 0.0] 
 # Initial Velocity
-ẋ0 = [0.0 0 0]
+#ẋ0 = [0.0 0 0]
+
+# Initial Position
+x0 = [0.0 0.2 0.4] 
+# Initial Velocity
+ẋ0 = [0.1 0.5 1.1]
 
 
 #===========================#
@@ -50,8 +55,8 @@ t = range(0, T, N)
 #O = zeros(nm, nm)
 
 # Define M̃ matrix
-#m_vec = fill(m, nm)
-#M̃ = diagm(m_vec)
+m_vec = fill(m, nm)
+M̃ = diagm(m_vec)
 
 # Define big M matrix 
 #M = [I O; O M̃]
@@ -63,7 +68,7 @@ t = range(0, T, N)
 # Matrix #
 #========#
 
-#= A = zeros(nm,nm)
+A = zeros(nm,nm)
 
 for i in 1:nm
     for j in 1:nm
@@ -76,7 +81,7 @@ for i in 1:nm
     end 
 end
 
-At = A' =#
+At = A' 
 
 #===========#
 # LinearMap #
@@ -132,11 +137,11 @@ end
 A = LinearMap(A_times!,A_times_T!, nm) =#
 
 # Define K̃ matrix
-#k_vec = fill(k,nm)
-#K̃ = diagm(k_vec)
+k_vec = fill(k,nm)
+K̃ = diagm(k_vec)
 
 # Define K̂
-#K̂ = A'*K̃*A
+K̂ = A'*K̃*A
 
 # Define big K matrix
 #K = [O -I; K̂ O]
@@ -144,8 +149,8 @@ A = LinearMap(A_times!,A_times_T!, nm) =#
 # Define big C matrix
 #C = (-inv(M) * K)
 
-M̃ = [10 0 0; 0 20 0; 0 0 30]
-K̂ = 1e3*[45 -20 -15;-20 45 -25;-15 -25 40]
+#M̃ = [10 0 0; 0 20 0; 0 0 30]
+#K̂ = 1e3*[45 -20 -15;-20 45 -25;-15 -25 40]
 
 # Define P matrix
 
@@ -249,3 +254,5 @@ end
 #=================#
 
 plot(t[:],u[1,:])
+plot!(t[:],u[2,:])
+plot!(t[:],u[3,:])
