@@ -12,14 +12,14 @@ using LinearAlgebra
 
 # TIME GRID
 
-T = 2 
-dt = 0.002 
+T = 25 
+dt = 0.02 
 N = Int(T/dt) + 1 # Number of time-steps
 t = range(0, T, N)
 
 
 # External FORCE
-f = (t -> sin(t)*ones(2))
+f = (t -> sin.(t))#*ones(2))
 
 # Matrix O
 O = zeros(2,2)

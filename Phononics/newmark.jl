@@ -14,8 +14,8 @@ using LinearAlgebra, LinearMaps, Plots
 # USER INPUT #
 #============#
 
-T = 5
-dt = 0.005 
+T = 25
+dt = 0.02 
 # Here define the number of pair spring-mass: 
 nm = 3
 # Assuming all the masses are equal:
@@ -27,7 +27,7 @@ k = 8
 γ = 1/2
 β = 1/4
 
-
+f = (t-> sin.(t)*ones(nm))
 
 # Initial Quantities
 # Note that we should assign nm quatities for position and velocity
@@ -46,15 +46,12 @@ ẋ0 = [0.0 0 0]
 N = Int(T/dt) + 1 # Number of time-steps
 t = range(0, T, N)
 
-# Define the zero matrix:
-#O = zeros(nm, nm)
+
 
 # Define M̃ matrix
-#m_vec = fill(m, nm)
-#M̃ = diagm(m_vec)
+m_vec = fill(m, nm)
+M̃ = diagm(m_vec)
 
-# Define big M matrix 
-#M = [I O; O M̃]
 
 # Define A and At matrices: We either can create the actual A matrix
 # Or we can apply a function Atimes! that maps a matrix. 
@@ -63,7 +60,7 @@ t = range(0, T, N)
 # Matrix #
 #========#
 
-#= A = zeros(nm,nm)
+A = zeros(nm,nm)
 
 for i in 1:nm
     for j in 1:nm
@@ -76,7 +73,7 @@ for i in 1:nm
     end 
 end
 
-At = A' =#
+At = A'
 
 #===========#
 # LinearMap #
@@ -132,28 +129,20 @@ end
 A = LinearMap(A_times!,A_times_T!, nm) =#
 
 # Define K̃ matrix
-#k_vec = fill(k,nm)
-#K̃ = diagm(k_vec)
+k_vec = fill(k,nm)
+K̃ = diagm(k_vec)
 
 # Define K̂
-#K̂ = A'*K̃*A
+K̂ = A'*K̃*A
 
-# Define big K matrix
-#K = [O -I; K̂ O]
-
-# Define big C matrix
-#C = (-inv(M) * K)
-
-M̃ = [10 0 0; 0 20 0; 0 0 30]
-K̂ = 1e3*[45 -20 -15;-20 45 -25;-15 -25 40]
+#M̃ = [10 0 0; 0 20 0; 0 0 30]
+#K̂ = 1e3*[45 -20 -15;-20 45 -25;-15 -25 40]
 
 # Define P matrix
-
-
 P = M̃/(β*dt^2) + K̂
 P_inv = inv(P)
 
-# Define State Space representation u:
+# Define u, ud, udd:
 u = zeros(nm,N)
 ud = zeros(nm,N)
 udd = zeros(nm,N)
@@ -168,84 +157,29 @@ udd[:,1]= -inv(M̃)*(K̂*u[:,1])
 #x[1,:] = [x0 ẋ0]
 
 
-#======================#
-# Forward Euler Scheme #
-#======================#
-
-#= for i in 2:N
-    u[:] = u[:] + dt *(C*u[:])
-    x[i,:] = u[:]
-end =#
-
-function forward_euler(y, h, N, A, save_var)
-    for i in 2:N
-        y[:] = y[:] + h * A *y[:]
-        save_var[i,:] = y[:]
-    end
-
-    return save_var
-end
-
-
-#=======================#
-# Backward Euler Scheme #
-#=======================#
-
-#= for i in 2:N     
-    u[:] = inv(I - dt* C)*u[:] 
-    x[i,:] = u[:]
-end =#
-
-function backward_euler(y, h, N, A, save_var)
-    for i in 2:N
-        y[:] = inv(I - h * A) * y[:]
-        save_var[i,:] = y[:]
-    end
-
-    return save_var
-end
-
-
-#====================#
-# Trapezoidal Scheme #
-#====================#
-
-#= for i in 2:N 
-    u[:] = inv(I - (dt/2)* C)*(I + (dt/2)* C)*u[:] 
-    x[i,:] = u[:]
-end =#
-
-function trapezoidal(y, h, N, A, save_var)
-    for i in 2:N
-        y[:] = inv(I - (h/2) * A) * (I + (h/2) * A) * y[:]
-        save_var[i,:] = y[:]
-    end
-
-    return save_var
-end
-
-
 #================#
 # Newmark Scheme #
 #================#
-
-for i in 1:N-1 
-    Q = M̃*((1/(β*dt^2))*u[:,i] + (1/(β*dt))*ud[:,i] + (1/(2*β) - 1)*udd[:,i])
-    if i < 5 
-        @show Q
+function newmark(u, ud, udd, N, β, γ, M̃, P)
+    for i in 1:N-1 
+        Q = M̃*((1/(β*dt^2))*u[:,i] + (1/(β*dt))*ud[:,i] + (1/(2*β) - 1)*udd[:,i])
+        #= if i < 5 
+            @show Q
+        end =# # Just to check Q
+        u[:, i+1] = inv(P)*Q 
+        udd[:, i+1] = (1/(β*dt^2))*(u[:,i+1]-u[:,i]) - (1/(β*dt))*ud[:,i]-((1/(2*β))-1)*udd[:,i]
+        ud[:, i+1] = ud[:,i] + (1-γ)*dt*udd[:,i] + γ*dt*udd[:, i+1]
     end
-    u[:, i+1] = inv(P)*Q 
-    udd[:, i+1] = (1/(β*dt^2))*(u[:,i+1]-u[:,i]) - (1/(β*dt))*ud[:,i]-((1/(2*β))-1)*udd[:,i]
-    ud[:, i+1] = ud[:,i] + (1-γ)*dt*udd[:,i] + γ*dt*udd[:, i+1]
+
+    return u
 end
 
-#x = forward_euler(u, dt, N, C, x)
-#x = backward_euler(u, dt, N, C, x)
-#x = trapezoidal(u, dt, N, C, x)
 
+u = newmark(u, ud, udd, N, β, γ, M̃, P)
 
 #=================#
 # Post Processing #
 #=================#
 
 plot(t[:],u[1,:])
+plot!(t[:],u[2,:])

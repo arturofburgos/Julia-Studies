@@ -25,9 +25,13 @@ k = 8
 # Note that we should assign nm quatities for position and velocity
 
 # Initial Position
-x0 = [0.0 0.2 0.4] 
+#= x0 = [0.0 0.2 0.4] 
 # Initial Velocity
-ẋ0 = [0.1 0.5 1.1]
+ẋ0 = [0.1 0.5 1.1] =#
+
+x0 = [0.1 0.0 0.0] 
+# Initial Velocity
+ẋ0 = [0.0 0 0]
 
 
 #===========================#
@@ -144,6 +148,9 @@ x = zeros(N,2*nm)
 # Assingning the initial conditions to solution array
 x[1,:] = [x0 ẋ0]
 
+# External FORCE
+f = (t -> sin.(t)*ones(nm))
+
 
 #======================#
 # Forward Euler Scheme #
@@ -154,9 +161,11 @@ x[1,:] = [x0 ẋ0]
     x[i,:] = u[:]
 end =#
 
-function forward_euler(y, h, N, A, save_var)
+function forward_euler(y, h, N, A, save_var, M, nm)
     for i in 2:N
-        y[:] = y[:] + h * A *y[:]
+        fn = f(t[i-1])
+        fbig = [zeros(nm); fn]
+        y[:] = y[:] + h * (A * y[:] + inv(M)*fbig)
         save_var[i,:] = y[:]
     end
 
@@ -173,8 +182,10 @@ end
     x[i,:] = u[:]
 end =#
 
-function backward_euler(y, h, N, A, save_var)
+function backward_euler(y, h, N, A, save_var, M, nm)
     for i in 2:N
+        fn = f(t[i-1])
+        fbig = [zeros(nm); fn]
         y[:] = inv(I - h * A) * y[:]
         save_var[i,:] = y[:]
     end
@@ -201,9 +212,9 @@ function trapezoidal(y, h, N, A, save_var)
     return save_var
 end
 
-#x = forward_euler(u, dt, N, C, x)
+x = forward_euler(u, dt, N, C, x, M, nm)
 #x = backward_euler(u, dt, N, C, x)
-x = trapezoidal(u, dt, N, C, x)
+#x = trapezoidal(u, dt, N, C, x)
 
 
 #=================#
