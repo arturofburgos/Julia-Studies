@@ -12,8 +12,8 @@ using LinearAlgebra, LinearMaps, Plots
 # USER INPUT #
 #============#
 
-T = 125
-dt = 0.02 
+T = 25
+dt = 0.005 
 # Here define the number of pair spring-mass: 
 nm = 3
 # Assuming all the masses are equal:
@@ -184,9 +184,10 @@ end =#
 
 function backward_euler(y, h, N, A, save_var, M, nm)
     for i in 2:N
-        fn = f(t[i-1])
-        fbig = [zeros(nm); fn]
-        y[:] = inv(I - h * A) * y[:]
+        fnp1 = f(t[i])
+        fbig = [zeros(nm); fnp1]
+        B = inv(I - h * A)
+        y[:] = B * y[:] + B * (h * inv(M) * fbig)
         save_var[i,:] = y[:]
     end
 
@@ -203,22 +204,27 @@ end
     x[i,:] = u[:]
 end =#
 
-function trapezoidal(y, h, N, A, save_var)
+function trapezoidal(y, h, N, A, save_var, M, nm)
     for i in 2:N
-        y[:] = inv(I - (h/2) * A) * (I + (h/2) * A) * y[:]
+        fn = f(t[i-1])
+        fnp1 = f(t[i])
+        fbig = [zeros(nm); fnp1 + fn]
+        D = (I + (h/2) * A)
+        B = inv(I - (h/2) * A)
+        y[:] = B * D * y[:] + B * (h/2) * inv(M) * fbig
         save_var[i,:] = y[:]
     end
 
     return save_var
 end
 
-x = forward_euler(u, dt, N, C, x, M, nm)
-#x = backward_euler(u, dt, N, C, x)
-#x = trapezoidal(u, dt, N, C, x)
+#x = forward_euler(u, dt, N, C, x, M, nm)
+#x = backward_euler(u, dt, N, C, x, M, nm)
+x = trapezoidal(u, dt, N, C, x, M, nm)
 
 
 #=================#
 # Post Processing #
 #=================#
 
-plot(t,x[:,1:nm])
+display(plot(t,x[:,1:nm]))
