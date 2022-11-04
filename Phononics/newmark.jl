@@ -14,8 +14,8 @@ using LinearAlgebra, LinearMaps, Plots
 # USER INPUT #
 #============#
 
-T = 25
-dt = 0.02 
+T = 5
+dt = 0.005 
 # Here define the number of pair spring-mass: 
 nm = 3
 # Assuming all the masses are equal:
@@ -33,9 +33,14 @@ f = (t-> sin.(t)*ones(nm))
 # Note that we should assign nm quatities for position and velocity
 
 # Initial Position
-x0 = [0.1 0.0 0.0] 
+#x0 = [0.1 0.0 0.0] 
 # Initial Velocity
-ẋ0 = [0.0 0 0]
+#ẋ0 = [0.0 0 0]
+
+# Initial Position
+x0 = [0.0 0.2 0.4] 
+# Initial Velocity
+ẋ0 = [0.1 0.5 1.1]
 
 
 #===========================#
@@ -135,6 +140,12 @@ K̃ = diagm(k_vec)
 # Define K̂
 K̂ = A'*K̃*A
 
+# Define big K matrix
+#K = [O -I; K̂ O]
+
+# Define big C matrix
+#C = (-inv(M) * K)
+
 #M̃ = [10 0 0; 0 20 0; 0 0 30]
 #K̂ = 1e3*[45 -20 -15;-20 45 -25;-15 -25 40]
 
@@ -181,5 +192,4 @@ u = newmark(u, ud, udd, N, β, γ, M̃, P)
 # Post Processing #
 #=================#
 
-plot(t[:],u[1,:])
-plot!(t[:],u[2,:])
+plot(t[:],u[1,1:nm])
