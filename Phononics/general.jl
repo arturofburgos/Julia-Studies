@@ -87,7 +87,7 @@ end
 At = A'
 
 #===========#
-# LinearMap #position
+# LinearMap #
 #===========#
 
 #= """Implements the matrix multiplication y = Ax.

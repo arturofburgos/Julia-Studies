@@ -27,7 +27,7 @@ k = 8
 γ = 1/2
 β = 1/4
 
-f = (t-> sin.(t)*ones(nm))
+
 
 # Initial Quantities
 # Note that we should assign nm quatities for position and velocity
@@ -166,6 +166,14 @@ u[:,1] = x0
 ud[:,1] = ẋ0
 udd[:,1]= -inv(M̃)*(K̂*u[:,1])
 
+
+# External force acting only (in my physical model) in the last mass
+function f(t)
+    a = zeros(nm)
+    a[end] = -0.02* 0.1
+    return a
+end
+
 # Defining solution array:
 #x = zeros(N,2*nm)
 # Assingning the initial conditions to solution array
@@ -177,6 +185,7 @@ udd[:,1]= -inv(M̃)*(K̂*u[:,1])
 #================#
 function newmark(u, ud, udd, N, β, γ, M̃, P)
     for i in 1:N-1 
+        fn = f(t[i])
         Q = M̃*((1/(β*dt^2))*u[:,i] + (1/(β*dt))*ud[:,i] + (1/(2*β) - 1)*udd[:,i])
         #= if i < 5 
             @show Q
