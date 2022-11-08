@@ -14,14 +14,25 @@ using LinearAlgebra, LinearMaps, Plots
 # USER INPUT #
 #============#
 
-T = 50
+T = 12
 dt = 0.005 
 # Here define the number of pair spring-mass: 
-nm = 2
+ncells = 5 
+
+nm = 2*ncells
+
 # Assuming all the masses are equal:
-m = 3
+m1 = 0.01
+
+m2 = 0.02
+
+m = [m1, m2]
 # Assuming all springs are equal:
-k = 8
+k1 = 20
+
+k2 = 25 
+
+k = [k1, k2]
 
 # γ and β parameters:
 γ = 1/2
@@ -42,9 +53,15 @@ k = 8
 # Initial Velocity
 #ẋ0 = [0.1 0.5 1.1]
 
-x0 = [0.0 0.2] 
+#x0 = [0.0 0.2] 
 # Initial Velocity
-ẋ0 = [0.1 0.5]
+#ẋ0 = [0.1 0.5]
+
+# Initial displacement
+x0 = zeros(nm)
+#x0[1] = 1.0
+# Initial Velocity
+ẋ0 = zeros(nm)
 
 
 #===========================#
@@ -58,7 +75,7 @@ t = range(0, T, N)
 
 
 # Define M̃ matrix
-m_vec = fill(m, nm)
+m_vec = repeat(m, ncells)
 M̃ = diagm(m_vec)
 
 
@@ -138,7 +155,7 @@ end
 A = LinearMap(A_times!,A_times_T!, nm) =#
 
 # Define K̃ matrix
-k_vec = fill(k,nm)
+k_vec = repeat(k, ncells)
 K̃ = diagm(k_vec)
 
 # Define K̂
@@ -170,7 +187,7 @@ udd[:,1]= -inv(M̃)*(K̂*u[:,1])
 # External force acting only (in my physical model) in the last mass
 function f(t)
     a = zeros(nm)
-    a[end] = -0.02* 0.1
+    a[end] = 0.01
     return a
 end
 
@@ -186,7 +203,7 @@ end
 function newmark(u, ud, udd, N, β, γ, M̃, P)
     for i in 1:N-1 
         fn = f(t[i])
-        Q = M̃*((1/(β*dt^2))*u[:,i] + (1/(β*dt))*ud[:,i] + (1/(2*β) - 1)*udd[:,i])
+        Q = fn + M̃*((1/(β*dt^2))*u[:,i] + (1/(β*dt))*ud[:,i] + (1/(2*β) - 1)*udd[:,i])
         #= if i < 5 
             @show Q
         end =# # Just to check Q
@@ -205,4 +222,4 @@ u = newmark(u, ud, udd, N, β, γ, M̃, P)
 # Post Processing #
 #=================#
 
-plot(t[:],u[end,1:end])
+display(plot(t[:],u[end,1:end], ylim = (0, 0.01)))

@@ -11,10 +11,10 @@ using LinearAlgebra, LinearMaps, Plots
 # USER INPUT #
 #============#
 
-T = 50
+T = 12
 dt = 0.005 
 # Here define the number of pair spring-mass: 
-ncells = 1 
+ncells = 5 
 
 nm = 2*ncells
 
@@ -26,9 +26,9 @@ m2 = 0.02
 
 m = [m1, m2]
 # Assuming all springs are equal:
-k1 = 3
+k1 = 20
 
-k2 = 6 
+k2 = 25 
 
 k = [k1, k2]
 # Initial Quantities
@@ -163,7 +163,7 @@ x[1,:] = [x0 ẋ0]
 # External force acting only (in my physical model) in the last mass
 function f(t)
     a = zeros(nm)
-    a[end] = -0.02* 0.1
+    a[end] = 0.01
     return a
 end
 
@@ -185,7 +185,7 @@ end =#
 
 function forward_euler(y, h, N, A, save_var, M, nm)
     for i in 2:N
-        fn = g(t[i-1])
+        fn = f(t[i-1])
         fbig = [zeros(nm); fn]
         y[:] = y[:] + h * (A * y[:] + inv(M)*fbig)
         save_var[i,:] = y[:]
@@ -206,7 +206,7 @@ end =#
 
 function backward_euler(y, h, N, A, save_var, M, nm)
     for i in 2:N
-        fnp1 = g(t[i])
+        fnp1 = f(t[i])
         fbig = [zeros(nm); fnp1]
         B = inv(I - h * A)
         y[:] = B * y[:] + B * (h * inv(M) * fbig)
@@ -228,8 +228,8 @@ end =#
 
 function trapezoidal(y, h, N, A, save_var, M, nm)
     for i in 2:N
-        fn = g(t[i-1])
-        fnp1 = g(t[i])
+        fn = f(t[i-1])
+        fnp1 = f(t[i])
         fbig = [zeros(nm); fnp1 + fn]
         D = (I + (h/2) * A)
         B = inv(I - (h/2) * A)
@@ -249,4 +249,5 @@ x = trapezoidal(u, dt, N, C, x, M, nm)
 # Post Processing #
 #=================#
 
-display(plot(t,x[:,nm]))
+display(plot(t,x[:,nm], ylim = (0, 0.01)))
+
