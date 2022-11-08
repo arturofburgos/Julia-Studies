@@ -14,10 +14,10 @@ using LinearAlgebra, LinearMaps, Plots
 # USER INPUT #
 #============#
 
-T = 5
+T = 50
 dt = 0.005 
 # Here define the number of pair spring-mass: 
-nm = 3
+nm = 2
 # Assuming all the masses are equal:
 m = 3
 # Assuming all springs are equal:
@@ -38,9 +38,13 @@ f = (t-> sin.(t)*ones(nm))
 #ẋ0 = [0.0 0 0]
 
 # Initial Position
-x0 = [0.0 0.2 0.4] 
+#x0 = [0.0 0.2 0.4] 
 # Initial Velocity
-ẋ0 = [0.1 0.5 1.1]
+#ẋ0 = [0.1 0.5 1.1]
+
+x0 = [0.0 0.2] 
+# Initial Velocity
+ẋ0 = [0.1 0.5]
 
 
 #===========================#
@@ -192,4 +196,4 @@ u = newmark(u, ud, udd, N, β, γ, M̃, P)
 # Post Processing #
 #=================#
 
-plot(t[:],u[1,1:nm])
+plot(t[:],u[end,1:end])
