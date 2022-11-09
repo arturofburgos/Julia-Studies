@@ -14,7 +14,7 @@ using LinearAlgebra, LinearMaps, Plots, Interpolations
 # USER INPUT #
 #============#
 
-T = 15
+T = 10
 dt = 0.005 
 # Here define the number of pair spring-mass: 
 ncells = 5 
@@ -210,7 +210,8 @@ end
 function f(t)
     a = zeros(nm)
     #println(t)
-    a[end] = itp(t)
+    #a[end] = itp(t)
+    a[end] = 0.025
     return a
 end
 
