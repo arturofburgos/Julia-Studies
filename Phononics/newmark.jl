@@ -28,9 +28,9 @@ m2 = 0.02
 
 m = [m1, m2]
 # Assuming all springs are equal:
-k1 = 100
+k1 = 20
 
-k2 = 150
+k2 = 30
 
 k = [k1, k2]
 
