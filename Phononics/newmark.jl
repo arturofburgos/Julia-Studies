@@ -9,12 +9,12 @@
 # Second order ODE: Harmonic Oscillation - nm spring and nm mass
 
 
-using LinearAlgebra, LinearMaps, Plots
+using LinearAlgebra, LinearMaps, Plots, Interpolations
 #============#
 # USER INPUT #
 #============#
 
-T = 12
+T = 15
 dt = 0.005 
 # Here define the number of pair spring-mass: 
 ncells = 5 
@@ -28,9 +28,9 @@ m2 = 0.02
 
 m = [m1, m2]
 # Assuming all springs are equal:
-k1 = 20
+k1 = 100
 
-k2 = 25 
+k2 = 150
 
 k = [k1, k2]
 
@@ -184,12 +184,36 @@ ud[:,1] = ẋ0
 udd[:,1]= -inv(M̃)*(K̂*u[:,1])
 
 
+
+
+ts, fs = open("$(@__DIR__)/forces.dat") do io
+
+    ts = Float64[0.0]
+    fs = Float64[0.0]
+    for line in readlines(io)
+        t, f = parse.(Float64, split(line))
+        push!(ts,t)
+        push!(fs,f)
+
+    end
+
+    return ts, fs
+
+end
+
+
+#itp = interpolate((ts,), fs, Gridded(Linear()))
+
+#@show itp(range(0,15,1000))
+
 # External force acting only (in my physical model) in the last mass
 function f(t)
     a = zeros(nm)
-    a[end] = 0.01
+    #println(t)
+    a[end] = itp(t)
     return a
 end
+
 
 # Defining solution array:
 #x = zeros(N,2*nm)
@@ -222,4 +246,61 @@ u = newmark(u, ud, udd, N, β, γ, M̃, P)
 # Post Processing #
 #=================#
 
-display(plot(t[:],u[end,1:end], ylim = (0, 0.01)))
+#display(plot(t[:],u[end,1:end], ylim = (0, 0.01)))
+
+
+
+using Plots, LaTeXStrings, Measures # Possible to use PyPlot too.
+gr()
+
+
+@userplot springmass
+@recipe function f!(var::springmass)
+        
+    size --> (950,400)
+    margin --> 5mm
+    top_margin --> 3mm
+    framestyle --> :box
+    grid --> :true
+    gridalpha --> 5
+    gridwidth --> 0.3
+    minorgrid --> :true
+    minorgridalpha --> 1
+    minorgridwidth --> 0.05
+    fontfamily --> "Computer Modern"
+
+    t, x = var.args
+    title --> "First mass displacement over time"
+    legend --> :topright
+    
+    
+    xaxis --> ("Time [s]")
+    yaxis -->("Displacement [m]")
+    #yguidefontrotation --> -90
+    seriestype --> :line 
+    linewidth --> 1.5
+    #color --> :red 
+    
+    return t, x
+
+end
+
+
+figure = springmass(t[:],u[end,1:end], label = "Numerical")
+display(figure)
+
+
+
+open("$(@__DIR__)/displacement.dat", "w") do io
+
+
+    for (t_i,u_i) in zip(t,eachcol(u))
+
+        join(io, [t_i, u_i...] , " ")
+        println(io)
+
+    end
+
+
+
+end
