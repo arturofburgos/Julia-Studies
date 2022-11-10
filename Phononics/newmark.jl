@@ -186,7 +186,7 @@ udd[:,1]= -inv(M̃)*(K̂*u[:,1])
 
 
 
-ts, fs = open("$(@__DIR__)/forces.dat") do io
+#= ts, fs = open("$(@__DIR__)/force.dat") do io
 
     ts = Float64[0.0]
     fs = Float64[0.0]
@@ -199,19 +199,35 @@ ts, fs = open("$(@__DIR__)/forces.dat") do io
 
     return ts, fs
 
+end =#
+
+
+
+fs = open("$(@__DIR__)/force.dat") do io
+
+    
+    fs = Float64[0.0]
+    for line in readlines(io)
+        f = parse(Float64, line)
+        #push!(ts,t)
+        push!(fs,f)
+
+    end
+
+    return fs
+
 end
 
+ts = range(0, 16, length=length(fs))
 
-#itp = interpolate((ts,), fs, Gridded(Linear()))
-
+itp = interpolate((ts,), fs, Gridded(Linear()))
 #@show itp(range(0,15,1000))
-
 # External force acting only (in my physical model) in the last mass
 function f(t)
     a = zeros(nm)
     #println(t)
-    #a[end] = itp(t)
-    a[end] = 0.025
+    a[end] = itp(t)
+    #a[end] = 0.025
     return a
 end
 
