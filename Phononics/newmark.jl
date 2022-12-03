@@ -14,7 +14,7 @@ using LinearAlgebra, LinearMaps, Plots, Interpolations
 # USER INPUT #
 #============#
 
-T = 10
+T = 16
 dt = 0.005 
 # Here define the number of pair spring-mass: 
 ncells = 5 
